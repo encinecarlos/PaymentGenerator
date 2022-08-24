@@ -96,8 +96,8 @@ namespace PainGeneratorFunction.Generator
                                 PstlAdr = new PostalAddress6CH
                                 {
                                     StrtNm = faker.Address.StreetName(),
-                                    BldgNb = faker.Random.Int(10, 50).ToString(),
-                                    PstCd = faker.Address.CountryCode(),
+                                    BldgNb = faker.Address.BuildingNumber(),
+                                    PstCd = faker.Address.ZipCode(),
                                     TwnNm = faker.Address.CitySuffix(),
                                     Ctry = "CH"
                                 }

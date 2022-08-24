@@ -15,7 +15,7 @@ namespace PainGeneratorFunction
     {
         [FunctionName("GeneratorFunction")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{payments:int}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "payments")] HttpRequest req,
             int payments, ILogger log)
         {
             log.LogInformation($"payment(s) to generate on this request: {payments}.");
