@@ -15,12 +15,16 @@ namespace PainGeneratorFunction
     {
         [FunctionName("GeneratorFunction")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{payments:int}")] HttpRequest req,
-            int payments, ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "payments")] HttpRequest req,
+            ILogger log)
         {
-            log.LogInformation($"payment(s) to generate on this request: {payments}.");
+            log.LogInformation($"Start file generation process.");
 
-            var generator = new PainGenerator().Generate(payments);
+            var content = await new StreamReader(req.Body).ReadToEndAsync();
+
+            var payRequest = JsonConvert.DeserializeObject<GeneratorRequest>(content);
+
+            var generator = new PainGenerator().Generate(payRequest);
 
             return new OkObjectResult(generator);
         }

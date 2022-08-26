@@ -12,7 +12,7 @@ namespace PainGeneratorFunction.Generator
 {
     public class PainGenerator
     {
-        public string Generate(int payments)
+        public string Generate(GeneratorRequest request)
         {
             var faker = new Faker("en");
 
@@ -28,9 +28,9 @@ namespace PainGeneratorFunction.Generator
                     {
                         MsgId = $"MSG-{Guid.NewGuid().ToString().Substring(0, 5)}",
                         CreDtTm = DateTime.Now,
-                        CtrlSum = paymentAmount * payments,
+                        CtrlSum = paymentAmount * request.CreditorQuantity,
                         CtrlSumSpecified = true,
-                        NbOfTxs = payments.ToString(),
+                        NbOfTxs = request.CreditorQuantity.ToString(),
                         InitgPty = new PartyIdentification32CH_NameAndId
                         {
                             Nm = faker.Name.FirstName()
