@@ -19,6 +19,10 @@ namespace PainGeneratorFunction.Generator
             var paymentAmount = faker.Finance.Amount(100, 10000);
 
             var paymentList = new List<PaymentInstructionInformation3CH>();
+            
+            decimal totalAmount = 0;
+            int counter = 0;
+            string totalTransactions = string.Empty;
 
             var painDocument = new Document
             {
@@ -26,11 +30,9 @@ namespace PainGeneratorFunction.Generator
                 {
                     GrpHdr = new GroupHeader32CH
                     {
-                        MsgId = $"MSG-{Guid.NewGuid().ToString().Substring(0, 5)}",
+                        MsgId = $"MSG-{Guid.NewGuid().ToString()[..5]}",
                         CreDtTm = DateTime.Now,
-                        CtrlSum = paymentAmount * request.CreditorQuantity,
                         CtrlSumSpecified = true,
-                        NbOfTxs = request.CreditorQuantity.ToString(),
                         InitgPty = new PartyIdentification32CH_NameAndId
                         {
                             Nm = faker.Name.FirstName()
@@ -39,9 +41,10 @@ namespace PainGeneratorFunction.Generator
                 }
             };
 
-            for (int i = 0; i < payments; i++)
+            foreach (var payment in request.Payments)
             {
-                var paymentInfo = new PaymentInstructionInformation3CH
+                var paymentLevelCList = new List<CreditTransferTransactionInformation10CH>();
+                var paymentLevelB = new PaymentInstructionInformation3CH
                 {
                     PmtInfId = $"PMT-{Guid.NewGuid().ToString().Substring(0, 5)}",
                     PmtMtd = PaymentMethod3Code.TRF,
@@ -63,7 +66,7 @@ namespace PainGeneratorFunction.Generator
                     {
                         Id = new AccountIdentification4ChoiceCH
                         {
-                            Item = "CH1408750509158434015",
+                            Item = payment.DebtorAccount,
                         }
                     },
                     DbtrAgt = new BranchAndFinancialInstitutionIdentification4CH_BicOrClrId
@@ -73,70 +76,83 @@ namespace PainGeneratorFunction.Generator
                             BIC = faker.Finance.Bic()
                         }
                     },
-                    CdtTrfTxInf = new CreditTransferTransactionInformation10CH[]
+                };
+
+                for (var j = 0; j < payment.CreditorQuantity; j++)
+                {
+                    var transaction = new CreditTransferTransactionInformation10CH
                     {
-                        new CreditTransferTransactionInformation10CH
+                        PmtId = new PaymentIdentification1
                         {
-                            PmtId = new PaymentIdentification1
+                            InstrId = $"INSTRID-{j+1}-{faker.Random.AlphaNumeric(2)}",
+                            EndToEndId = $"ENDTOENDID-{faker.Random.AlphaNumeric(5)}"
+                        },
+                        Amt = new AmountType3Choice
+                        {
+                            Item = new ActiveOrHistoricCurrencyAndAmount
                             {
-                                InstrId = $"INSTRID-02-{faker.Random.AlphaNumeric(2)}",
-                                EndToEndId = $"ENDTOENDID-{faker.Random.AlphaNumeric(5)}"
-                            },
-                            Amt = new AmountType3Choice
+                                Ccy = "CHF",
+                                Value = paymentAmount
+                            }
+                        },
+                        Cdtr = new PartyIdentification32CH_Name
+                        {
+                            Nm = faker.Name.FullName(),
+                            PstlAdr = new PostalAddress6CH
                             {
-                                Item = new ActiveOrHistoricCurrencyAndAmount
+                                StrtNm = faker.Address.StreetName(),
+                                BldgNb = faker.Address.BuildingNumber(),
+                                PstCd = faker.Address.ZipCode(),
+                                TwnNm = faker.Address.CitySuffix(),
+                                Ctry = "CH"
+                            }
+                        },
+                        CdtrAcct = new CashAccount16CH_Id
+                        {
+                            Id = new AccountIdentification4ChoiceCH
+                            {
+                                Item = payment.CreditorAccount
+                            }
+                        },
+                        RmtInf = new RemittanceInformation5CH
+                        {
+                            Strd = new StructuredRemittanceInformation7
+                            {
+                                CdtrRefInf = new CreditorReferenceInformation2
                                 {
-                                    Ccy = "CHF",
-                                    Value = paymentAmount
-                                }
-                            },
-                            Cdtr = new PartyIdentification32CH_Name
-                            {
-                                Nm = faker.Name.FullName(),
-                                PstlAdr = new PostalAddress6CH
-                                {
-                                    StrtNm = faker.Address.StreetName(),
-                                    BldgNb = faker.Address.BuildingNumber(),
-                                    PstCd = faker.Address.ZipCode(),
-                                    TwnNm = faker.Address.CitySuffix(),
-                                    Ctry = "CH"
-                                }
-                            },
-                            CdtrAcct = new CashAccount16CH_Id
-                            {
-                                Id = new AccountIdentification4ChoiceCH
-                                {
-                                    Item = "CH4108750509158434014"
-                                }
-                            },
-                            RmtInf = new RemittanceInformation5CH
-                            {
-                                Strd = new StructuredRemittanceInformation7
-                                {
-                                    CdtrRefInf = new CreditorReferenceInformation2
+                                    Tp = new CreditorReferenceType2
                                     {
-                                        Tp = new CreditorReferenceType2
+                                        CdOrPrtry = new CreditorReferenceType1Choice
                                         {
-                                            CdOrPrtry = new CreditorReferenceType1Choice
-                                            {
-                                                Item = "QRR"
-                                            }
-                                        },
-                                        Ref = "210000000003139471430009017"
+                                            Item = "QRR"
+                                        }
                                     },
-                                    AddtlRmtInf = new string[]
-                                    {
+                                    Ref = "210000000003139471430009017"
+                                },
+                                AddtlRmtInf = new string[]
+                                {
                                         $"ref info test {faker.Random.AlphaNumeric(5)}"
-                                    }
                                 }
                             }
                         }
-                    }
-                };
 
-                paymentList.Add(paymentInfo);
+                    };
+
+                    totalAmount += (transaction.Amt.Item as ActiveOrHistoricCurrencyAndAmount).Value;
+
+                    paymentLevelCList.Add(transaction);
+                }
+
+                counter += paymentLevelCList.Count;
+
+                paymentLevelB.CdtTrfTxInf = paymentLevelCList.ToArray();
+
+                paymentList.Add(paymentLevelB);
+                paymentLevelCList.Clear();
             }
 
+            painDocument.CstmrCdtTrfInitn.GrpHdr.CtrlSum = totalAmount;
+            painDocument.CstmrCdtTrfInitn.GrpHdr.NbOfTxs = counter.ToString();
             painDocument.CstmrCdtTrfInitn.PmtInf = paymentList.ToArray();
 
             var pain001 = new XmlSerializer(painDocument.GetType());
