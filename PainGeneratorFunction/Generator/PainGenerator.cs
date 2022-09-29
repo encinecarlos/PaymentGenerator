@@ -41,7 +41,7 @@ namespace PainGeneratorFunction.Generator
                 }
             };
 
-            foreach (var payment in request.Payments)
+            Parallel.ForEach(request.Payments, payment => 
             {
                 var paymentLevelCList = new List<CreditTransferTransactionInformation10CH>();
                 var paymentLevelB = new PaymentInstructionInformation3CH
@@ -78,13 +78,13 @@ namespace PainGeneratorFunction.Generator
                     },
                 };
 
-                for (var j = 0; j < payment.CreditorQuantity; j++)
+                Parallel.For(0, payment.CreditorQuantity, j =>
                 {
                     var transaction = new CreditTransferTransactionInformation10CH
                     {
                         PmtId = new PaymentIdentification1
                         {
-                            InstrId = $"INSTRID-{j+1}-{faker.Random.AlphaNumeric(2)}",
+                            InstrId = $"INSTRID-{j + 1}-{faker.Random.AlphaNumeric(2)}",
                             EndToEndId = $"ENDTOENDID-{faker.Random.AlphaNumeric(5)}"
                         },
                         Amt = new AmountType3Choice
@@ -141,7 +141,7 @@ namespace PainGeneratorFunction.Generator
                     totalAmount += (transaction.Amt.Item as ActiveOrHistoricCurrencyAndAmount).Value;
 
                     paymentLevelCList.Add(transaction);
-                }
+                });
 
                 counter += paymentLevelCList.Count;
 
@@ -149,6 +149,116 @@ namespace PainGeneratorFunction.Generator
 
                 paymentList.Add(paymentLevelB);
                 paymentLevelCList.Clear();
+            });
+
+            foreach (var payment in request.Payments)
+            {
+                //var paymentLevelCList = new List<CreditTransferTransactionInformation10CH>();
+                //var paymentLevelB = new PaymentInstructionInformation3CH
+                //{
+                //    PmtInfId = $"PMT-{Guid.NewGuid().ToString().Substring(0, 5)}",
+                //    PmtMtd = PaymentMethod3Code.TRF,
+                //    BtchBookgSpecified = true,
+                //    BtchBookg = true,
+                //    ReqdExctnDt = DateTime.Now,
+                //    Dbtr = new PartyIdentification32CH
+                //    {
+                //        Nm = faker.Name.FullName(),
+                //        PstlAdr = new PostalAddress6CH
+                //        {
+                //            Ctry = "CH",
+                //            AdrLine = new string[] {
+                //                faker.Address.StreetName()
+                //            }
+                //        }
+                //    },
+                //    DbtrAcct = new CashAccount16CH_IdTpCcy
+                //    {
+                //        Id = new AccountIdentification4ChoiceCH
+                //        {
+                //            Item = payment.DebtorAccount,
+                //        }
+                //    },
+                //    DbtrAgt = new BranchAndFinancialInstitutionIdentification4CH_BicOrClrId
+                //    {
+                //        FinInstnId = new FinancialInstitutionIdentification7CH_BicOrClrId
+                //        {
+                //            BIC = faker.Finance.Bic()
+                //        }
+                //    },
+                //};
+
+                //for (var j = 0; j < payment.CreditorQuantity; j++)
+                //{
+                //    var transaction = new CreditTransferTransactionInformation10CH
+                //    {
+                //        PmtId = new PaymentIdentification1
+                //        {
+                //            InstrId = $"INSTRID-{j+1}-{faker.Random.AlphaNumeric(2)}",
+                //            EndToEndId = $"ENDTOENDID-{faker.Random.AlphaNumeric(5)}"
+                //        },
+                //        Amt = new AmountType3Choice
+                //        {
+                //            Item = new ActiveOrHistoricCurrencyAndAmount
+                //            {
+                //                Ccy = "CHF",
+                //                Value = paymentAmount
+                //            }
+                //        },
+                //        Cdtr = new PartyIdentification32CH_Name
+                //        {
+                //            Nm = faker.Name.FullName(),
+                //            PstlAdr = new PostalAddress6CH
+                //            {
+                //                StrtNm = faker.Address.StreetName(),
+                //                BldgNb = faker.Address.BuildingNumber(),
+                //                PstCd = faker.Address.ZipCode(),
+                //                TwnNm = faker.Address.CitySuffix(),
+                //                Ctry = "CH"
+                //            }
+                //        },
+                //        CdtrAcct = new CashAccount16CH_Id
+                //        {
+                //            Id = new AccountIdentification4ChoiceCH
+                //            {
+                //                Item = payment.CreditorAccount
+                //            }
+                //        },
+                //        RmtInf = new RemittanceInformation5CH
+                //        {
+                //            Strd = new StructuredRemittanceInformation7
+                //            {
+                //                CdtrRefInf = new CreditorReferenceInformation2
+                //                {
+                //                    Tp = new CreditorReferenceType2
+                //                    {
+                //                        CdOrPrtry = new CreditorReferenceType1Choice
+                //                        {
+                //                            Item = "QRR"
+                //                        }
+                //                    },
+                //                    Ref = "210000000003139471430009017"
+                //                },
+                //                AddtlRmtInf = new string[]
+                //                {
+                //                        $"ref info test {faker.Random.AlphaNumeric(5)}"
+                //                }
+                //            }
+                //        }
+
+                //    };
+
+                //    totalAmount += (transaction.Amt.Item as ActiveOrHistoricCurrencyAndAmount).Value;
+
+                //    paymentLevelCList.Add(transaction);
+                //}
+
+                //counter += paymentLevelCList.Count;
+
+                //paymentLevelB.CdtTrfTxInf = paymentLevelCList.ToArray();
+
+                //paymentList.Add(paymentLevelB);
+                //paymentLevelCList.Clear();
             }
 
             painDocument.CstmrCdtTrfInitn.GrpHdr.CtrlSum = totalAmount;
@@ -173,10 +283,9 @@ namespace PainGeneratorFunction.Generator
 
             var content = Encoding.UTF8.GetString(buffer);
 
-            var file = Convert.ToBase64String(buffer);
+            var file = request.EncodeResult is true ? Convert.ToBase64String(buffer) : content;
 
             return file;
-
         }
     }
 }
