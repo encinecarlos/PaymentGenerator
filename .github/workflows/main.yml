@@ -1,0 +1,25 @@
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup dotnet
+        uses: actions/checkout@v3
+        with:
+          dotnet-version: "6.x"
+      - name: install dependencies
+        run: dotnet restore
+      - name: build application
+        run: dotnet build
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Functions Action
+        uses: Azure/functions-action@v1.4.7
+        with:
+          app-name: PainGeneratorFunction20220819233849
+          
