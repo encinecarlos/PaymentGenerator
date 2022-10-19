@@ -17,8 +17,14 @@ jobs:
         run: dotnet build
   deploy:
     runs-on: ubuntu-latest
+    environment: deploy
     steps:
-      - name: Azure Functions Action
+      - name: Azure Login
+        uses: Azure/login@v1.4.6
+        with:
+          # Paste output of `az ad sp create-for-rbac` as value of secret variable: AZURE_CREDENTIALS
+          creds: ${{AZURE_CREDENTIALS}}
+      - name: publish function
         uses: Azure/functions-action@v1.4.7
         with:
           app-name: PainGeneratorFunction20220819233849
