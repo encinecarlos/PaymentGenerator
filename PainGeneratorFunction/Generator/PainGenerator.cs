@@ -111,7 +111,7 @@ namespace PainGeneratorFunction.Generator
                         {
                             Id = new AccountIdentification4ChoiceCH
                             {
-                                Item = payment.CreditorAccount
+                                Item = faker.Finance.Iban(false, "CH")
                             }
                         },
                         RmtInf = new RemittanceInformation5CH
