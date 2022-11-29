@@ -18,7 +18,7 @@ namespace PainGeneratorFunction
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "payments")] HttpRequest req,
             ILogger log)
         {
-            log.LogInformation($"Start file generation process.");
+            log.LogInformation($"Start file generation process.", req.Body);
 
             var content = await new StreamReader(req.Body).ReadToEndAsync();
 
