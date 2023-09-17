@@ -15,45 +15,7 @@ namespace PainGeneratorFunction.Generator
         public string Generate(GeneratorRequest request)
         {
             var faker = new Faker("en");
-
-            var ibanList = new List<string> {
-                "CH0608750063000104001",
-                "CH5908750063000104017",
-                "CH4308750063000104014",
-                "CH7608750063000104002",
-                "CH3208750063000104018",
-                "CH4908750063000104003",
-                "CH8608750063000104016",
-                "CH1608750063000104015",
-                "CH3308750063000104000",
-                "CH3808750063000104007",
-                "CH5408750063000104010",
-                "CH3308750063043754000",
-                "CH0608750063043754001",
-                "CH7608750063043754002",
-                "CH4908750063043754003",
-                "CH2008750063040564001",
-                "CH9008750063040564002",
-                "CH6308750063040564003",
-                "CH4708750063040564000",
-                "CH5008750063040394002",
-                "CH2308750063040394003",
-                "CH9308750063040394004",
-                "CH0708750063040394000",
-                "CH3208750063086454000",
-                "CH0508750063086454001",
-                "CH3008750050639454000",
-                "CH0308750050639454001",
-                "CH7308750050639454002",
-                "CH2708750063000104011",
-                "CH9708750063000104012",
-                "CH7008750063000104013",
-                "CH7108750060149374002",
-                "CH4408750060149374003",
-                "CH2808750060149374000",
-                "CH9808750060149374001"
-            };
-
+                        
             var paymentAmount = faker.Finance.Amount(100, 10000);
 
             var paymentList = new List<PaymentInstructionInformation3CH>();
@@ -142,14 +104,14 @@ namespace PainGeneratorFunction.Generator
                                 BldgNb = faker.Address.BuildingNumber(),
                                 PstCd = faker.Address.ZipCode(),
                                 TwnNm = faker.Address.CitySuffix(),
-                                Ctry = "CH"
+                                Ctry = faker.Address.CountryCode(),
                             }
                         },
                         CdtrAcct = new CashAccount16CH_Id
                         {
                             Id = new AccountIdentification4ChoiceCH
                             {
-                                Item = faker.PickRandom(ibanList)
+                                Item = faker.Finance.Iban()
                             }
                         },
                         RmtInf = new RemittanceInformation5CH
@@ -165,11 +127,11 @@ namespace PainGeneratorFunction.Generator
                                             Item = "QRR"
                                         }
                                     },
-                                    Ref = "210000000003139471430009017"
+                                    Ref = faker.Random.AlphaNumeric(30)
                                 },
                                 AddtlRmtInf = new string[]
                                 {
-                                        $"ref info test {faker.Random.AlphaNumeric(5)}"
+                                        $"ref info test"
                                 }
                             }
                         }
